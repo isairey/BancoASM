@@ -360,17 +360,57 @@ FinRetiro:
 
         .ELSEIF eax == IDC_CERRARSESION
 
-            invoke MessageBox, hWnd, ADDR MsgCerrar, ADDR TituloCerrar, MB_YESNO or MB_ICONQUESTION
+         ;=============================================================
+; PARTE 9/10 - CERRAR SESIÓN AVANZADO
+;=============================================================
 
-            cmp eax, IDYES
-            jne FinMenu
+;-------------------------------------------------------------
+; BOTÓN: CERRAR SESIÓN
+;-------------------------------------------------------------
 
-            invoke EndDialog, hWnd, 0
 
-        .ENDIF
 
-        mov eax, TRUE
-        ret
+    ;---------------------------------------------------------
+    ; Confirmación del usuario
+    ;---------------------------------------------------------
+
+    invoke MessageBox, hMenu, ADDR MsgCerrar, ADDR TituloCerrar, MB_YESNO or MB_ICONQUESTION
+
+    cmp eax, IDYES
+    jne FinCerrarSesion
+
+    ;---------------------------------------------------------
+    ; Guardar datos del banco antes de salir
+    ;---------------------------------------------------------
+
+    invoke GuardarBanco
+
+    ;---------------------------------------------------------
+    ; Limpiar variables sensibles
+    ;---------------------------------------------------------
+
+    mov SaldoActual, 0
+    mov CuentaActual, 0
+
+    invoke RtlZeroMemory, ADDR BufferNumero, SIZEOF BufferNumero
+    invoke RtlZeroMemory, ADDR BufferSaldoFinal, SIZEOF BufferSaldoFinal
+
+    ;---------------------------------------------------------
+    ; Cerrar ventana del menú
+    ;---------------------------------------------------------
+
+    invoke EndDialog, hMenu, 0
+
+    jmp FinMenu
+
+FinCerrarSesion:
+
+    ;---------------------------------------------------------
+    ; Usuario canceló cierre
+    ;---------------------------------------------------------
+
+    mov eax, TRUE
+    ret
 
     .ELSEIF eax == WM_CLOSE
 

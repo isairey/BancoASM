@@ -414,31 +414,56 @@ FinCerrarSesion:
 
     .ELSEIF eax == WM_CLOSE
 
-        ;---------------------------------------------
-        ; Cierre con X
-        ;---------------------------------------------
+        ;=============================================================
+; PARTE 10/10 - FINALIZACIÓN DEL MÓDULO
+;=============================================================
 
-        invoke MessageBox, hWnd, ADDR MsgCerrar, ADDR TituloCerrar, MB_YESNO or MB_ICONQUESTION
+;-------------------------------------------------------------
+; Manejo de cierre de ventana (X)
+;-------------------------------------------------------------
 
-        cmp eax, IDYES
-        jne CancelarCierre
 
-        invoke EndDialog, hWnd, 0
-        jmp FinMenu
-
-CancelarCierre:
-
-        mov eax, TRUE
-        ret
-
-    .ENDIF
 
     ;---------------------------------------------------------
-    ; Mensaje no procesado
+    ; Confirmar salida del sistema
     ;---------------------------------------------------------
+
+    invoke MessageBox, hMenu, ADDR MsgCerrar, ADDR TituloCerrar, MB_YESNO or MB_ICONQUESTION
+
+    cmp eax, IDYES
+    jne CancelarSalida
+
+    ;---------------------------------------------------------
+    ; Guardar datos antes de cerrar
+    ;---------------------------------------------------------
+
+    invoke GuardarBanco
+
+    ;---------------------------------------------------------
+    ; Cerrar ventana del menú
+    ;---------------------------------------------------------
+
+    invoke EndDialog, hMenu, 0
+
+    jmp FinMenu
+
+CancelarSalida:
+
+    mov eax, TRUE
+    ret
+
+;-------------------------------------------------------------
+; Mensaje no procesado
+;-------------------------------------------------------------
+
+.ELSE
 
     mov eax, FALSE
     ret
+
+;-------------------------------------------------------------
+; Salida final del procedimiento
+;-------------------------------------------------------------
 
 FinMenu:
 

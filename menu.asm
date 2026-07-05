@@ -275,7 +275,54 @@ FinRetiro:
 
         .ELSEIF eax == IDC_TRANSFERIR
 
-            ; Parte 7
+            ;=============================================================
+; PARTE 7/10 - TRANSFERENCIA
+;=============================================================
+
+;-------------------------------------------------------------
+; BOTÓN: TRANSFERIR
+;-------------------------------------------------------------
+
+
+
+    ;---------------------------------------------------------
+    ; Llamar al sistema de transferencia
+    ;---------------------------------------------------------
+
+    invoke TransferirDinero, CuentaActual
+
+    ;---------------------------------------------------------
+    ; Actualizar saldo después de la transferencia
+    ;---------------------------------------------------------
+
+    invoke ObtenerSaldo, CuentaActual
+    mov SaldoActual, eax
+
+    ;---------------------------------------------------------
+    ; Convertir a texto
+    ;---------------------------------------------------------
+
+    invoke wsprintf, ADDR BufferNumero, ADDR FormatoNumero, SaldoActual
+
+    ;---------------------------------------------------------
+    ; Construir texto final
+    ;---------------------------------------------------------
+
+    invoke lstrcpy, ADDR BufferSaldoFinal, ADDR TextoSaldo
+    invoke lstrcat, ADDR BufferSaldoFinal, ADDR BufferNumero
+
+    ;---------------------------------------------------------
+    ; Actualizar interfaz
+    ;---------------------------------------------------------
+
+    invoke SetDlgItemText, hMenu, IDC_SALDOACTUAL, ADDR BufferSaldoFinal
+
+    ;---------------------------------------------------------
+    ; Mensaje de confirmación
+    ;---------------------------------------------------------
+
+    invoke MessageBox, hMenu, CSTR("Transferencia realizada correctamente."), ADDR TituloMenu, MB_OK or MB_ICONINFORMATION
+
 
         ;=================================================
         ; BOTÓN HISTORIAL

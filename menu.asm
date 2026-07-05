@@ -2,7 +2,7 @@
 ; menu.asm
 ; Sistema Bancario ASM
 ; Módulo del Menú Principal
-; Autor: Isai Reyes Peña
+; PARTE 1/10
 ;=============================================================
 
 .386
@@ -36,7 +36,7 @@ EXTERN MostrarHistorial:PROC
 EXTERN GuardarBanco:PROC
 
 ;=============================================================
-; Variables Inicializadas
+; Variables de datos
 ;=============================================================
 
 .data
@@ -44,17 +44,16 @@ EXTERN GuardarBanco:PROC
 TituloMenu db "Sistema Bancario",0
 
 MsgCerrar db "¿Desea cerrar la sesión?",0
-
 TituloCerrar db "Cerrar Sesión",0
 
-TextoSaldo db "Saldo Actual: $",0
+TextoSaldo db "Saldo Actual: ",0
 
-FormatoSaldo db "%u",0
+FormatoNumero db "%u",0
 
 CadenaVacia db 0
 
 ;=============================================================
-; Variables No Inicializadas
+; Variables sin inicializar
 ;=============================================================
 
 .data?
@@ -63,15 +62,16 @@ hMenu HWND ?
 
 SaldoActual DWORD ?
 
-BufferSaldo db 32 dup(?)
-
 CuentaActual DWORD ?
+
+BufferNumero db 32 dup(?)
+BufferSaldoFinal db 64 dup(?)
 
 .code
 
 
 ;=============================================================
-; Procedimiento principal del menú
+; PARTE 2/10 - Procedimiento principal del menú
 ;=============================================================
 
 MenuProc PROC hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
@@ -92,13 +92,11 @@ MenuProc PROC hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     .IF eax == WM_INITDIALOG
 
         ;---------------------------------------------
-        ; Inicializar ventana del menú
+        ; Inicialización del menú
         ;---------------------------------------------
 
         invoke SetWindowText, hWnd, ADDR TituloMenu
-
-        ; Aquí se actualizará el saldo en Parte 3
-
+        invoke ShowInitialBalance
         mov eax, TRUE
         ret
 
@@ -112,47 +110,183 @@ MenuProc PROC hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
         and eax, 0FFFFh
 
         ;=================================================
-        ; CONSULTAR SALDO
+        ; BOTÓN CONSULTAR SALDO
         ;=================================================
 
         .IF eax == IDC_CONSULTAR
 
-            ; Se implementa en Parte 4
+           ;=============================================================
+; PARTE 4/10 - Consultar saldo (actualización manual)
+;=============================================================
+
+;-------------------------------------------------------------
+; BOTÓN: CONSULTAR SALDO
+;-------------------------------------------------------------
+
+
+    ;---------------------------------------------------------
+    ; Refrescar saldo desde el sistema de cuentas
+    ;---------------------------------------------------------
+
+    invoke ObtenerSaldo, CuentaActual
+    mov SaldoActual, eax
+
+    ;---------------------------------------------------------
+    ; Convertir a texto
+    ;---------------------------------------------------------
+
+    invoke wsprintf, ADDR BufferNumero, ADDR FormatoNumero, SaldoActual
+
+    ;---------------------------------------------------------
+    ; Construir mensaje final
+    ;---------------------------------------------------------
+
+    invoke lstrcpy, ADDR BufferSaldoFinal, ADDR TextoSaldo
+    invoke lstrcat, ADDR BufferSaldoFinal, ADDR BufferNumero
+
+    ;---------------------------------------------------------
+    ; Mostrar en pantalla
+    ;---------------------------------------------------------
+
+    invoke SetDlgItemText, hMenu, IDC_SALDOACTUAL, ADDR BufferSaldoFinal
 
         ;=================================================
-        ; DEPOSITAR
+        ; BOTÓN DEPOSITAR
         ;=================================================
 
         .ELSEIF eax == IDC_DEPOSITAR
 
-            ; Se implementa en Parte 5
+           ;=============================================================
+; PARTE 5/10 - DEPÓSITO
+;=============================================================
+
+;-------------------------------------------------------------
+; BOTÓN: DEPOSITAR
+;-------------------------------------------------------------
+
+
+    ;---------------------------------------------------------
+    ; Llamar al sistema de depósito
+    ;---------------------------------------------------------
+
+    invoke DepositarDinero, CuentaActual
+
+    ;---------------------------------------------------------
+    ; Actualizar saldo después del depósito
+    ;---------------------------------------------------------
+
+    invoke ObtenerSaldo, CuentaActual
+    mov SaldoActual, eax
+
+    ;---------------------------------------------------------
+    ; Convertir a texto
+    ;---------------------------------------------------------
+
+    invoke wsprintf, ADDR BufferNumero, ADDR FormatoNumero, SaldoActual
+
+    ;---------------------------------------------------------
+    ; Construir texto final
+    ;---------------------------------------------------------
+
+    invoke lstrcpy, ADDR BufferSaldoFinal, ADDR TextoSaldo
+    invoke lstrcat, ADDR BufferSaldoFinal, ADDR BufferNumero
+
+    ;---------------------------------------------------------
+    ; Mostrar en pantalla
+    ;---------------------------------------------------------
+
+    invoke SetDlgItemText, hMenu, IDC_SALDOACTUAL, ADDR BufferSaldoFinal
+
+    ;---------------------------------------------------------
+    ; Mensaje de confirmación
+    ;---------------------------------------------------------
+
+    invoke MessageBox, hMenu, CSTR("Depósito realizado correctamente."), ADDR TituloMenu, MB_OK or MB_ICONINFORMATION
+
 
         ;=================================================
-        ; RETIRAR
+        ; BOTÓN RETIRAR
         ;=================================================
 
         .ELSEIF eax == IDC_RETIRAR
 
-            ; Se implementa en Parte 6
+            ;=============================================================
+; PARTE 6/10 - RETIRO
+;=============================================================
+
+;-------------------------------------------------------------
+; BOTÓN: RETIRAR
+;-------------------------------------------------------------
+
+
+
+    ;---------------------------------------------------------
+    ; Llamar al sistema de retiro
+    ;---------------------------------------------------------
+
+    invoke RetirarDinero, CuentaActual
+
+    ;---------------------------------------------------------
+    ; Obtener saldo actualizado
+    ;---------------------------------------------------------
+
+    invoke ObtenerSaldo, CuentaActual
+    mov SaldoActual, eax
+
+    ;---------------------------------------------------------
+    ; Convertir a texto
+    ;---------------------------------------------------------
+
+    invoke wsprintf, ADDR BufferNumero, ADDR FormatoNumero, SaldoActual
+
+    ;---------------------------------------------------------
+    ; Construir texto final
+    ;---------------------------------------------------------
+
+    invoke lstrcpy, ADDR BufferSaldoFinal, ADDR TextoSaldo
+    invoke lstrcat, ADDR BufferSaldoFinal, ADDR BufferNumero
+
+    ;---------------------------------------------------------
+    ; Actualizar interfaz
+    ;---------------------------------------------------------
+
+    invoke SetDlgItemText, hMenu, IDC_SALDOACTUAL, ADDR BufferSaldoFinal
+
+    ;---------------------------------------------------------
+    ; Mensaje de confirmación
+    ;---------------------------------------------------------
+
+    invoke MessageBox, hMenu, CSTR("Retiro realizado correctamente."), ADDR TituloMenu, MB_OK or MB_ICONINFORMATION
+
+;-------------------------------------------------------------
+; Validación básica (saldo insuficiente)
+;-------------------------------------------------------------
+
+    cmp SaldoActual, 0
+    jge FinRetiro
+
+    invoke MessageBox, hMenu, CSTR("Saldo insuficiente."), ADDR TituloMenu, MB_OK or MB_ICONERROR
+
+FinRetiro:
 
         ;=================================================
-        ; TRANSFERIR
+        ; BOTÓN TRANSFERIR
         ;=================================================
 
         .ELSEIF eax == IDC_TRANSFERIR
 
-            ; Se implementa en Parte 7
+            ; Parte 7
 
         ;=================================================
-        ; HISTORIAL
+        ; BOTÓN HISTORIAL
         ;=================================================
 
         .ELSEIF eax == IDC_HISTORIAL
 
-            ; Se implementa en Parte 8
+            ; Parte 8
 
         ;=================================================
-        ; CERRAR SESIÓN
+        ; BOTÓN CERRAR SESIÓN
         ;=================================================
 
         .ELSEIF eax == IDC_CERRARSESION
@@ -172,7 +306,7 @@ MenuProc PROC hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     .ELSEIF eax == WM_CLOSE
 
         ;---------------------------------------------
-        ; Cerrar ventana desde la X
+        ; Cierre con X
         ;---------------------------------------------
 
         invoke MessageBox, hWnd, ADDR MsgCerrar, ADDR TituloCerrar, MB_YESNO or MB_ICONQUESTION
@@ -203,3 +337,41 @@ FinMenu:
     ret
 
 MenuProc ENDP
+
+
+;=============================================================
+; PARTE 3/10 - Mostrar saldo al abrir el menú
+;=============================================================
+
+ShowInitialBalance PROC
+
+    ;---------------------------------------------------------
+    ; Obtener saldo desde el sistema de cuentas
+    ;---------------------------------------------------------
+
+    invoke ObtenerSaldo, CuentaActual
+    mov SaldoActual, eax
+
+    ;---------------------------------------------------------
+    ; Convertir número a texto
+    ;---------------------------------------------------------
+
+    invoke wsprintf, ADDR BufferNumero, ADDR FormatoNumero, SaldoActual
+
+    ;---------------------------------------------------------
+    ; Construir texto final: "Saldo Actual: XXXXX"
+    ;---------------------------------------------------------
+
+    invoke lstrcpy, ADDR BufferSaldoFinal, ADDR TextoSaldo
+    invoke lstrcat, ADDR BufferSaldoFinal, ADDR BufferNumero
+
+    ;---------------------------------------------------------
+    ; Mostrar en la interfaz (Label del menú)
+    ;---------------------------------------------------------
+
+    invoke SetDlgItemText, hMenu, IDC_SALDOACTUAL, ADDR BufferSaldoFinal
+
+    ret
+
+ShowInitialBalance ENDP
+

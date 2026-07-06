@@ -547,3 +547,128 @@ FinSeparacion:
     ret
 
 SepararCampos ENDP
+
+;=============================================================
+; PARTE 5/14
+; BuscarCuenta
+; Busca un usuario dentro de banco.dat
+;=============================================================
+
+BuscarCuenta PROC lpUsuario:DWORD
+
+BuscarInicio:
+
+    ;---------------------------------------------------------
+    ; Abrir archivo
+    ;---------------------------------------------------------
+
+    invoke AbrirArchivo
+
+    cmp eax,TRUE
+    jne ErrorBuscar
+
+    ;---------------------------------------------------------
+    ; Leer archivo completo
+    ;---------------------------------------------------------
+
+    invoke LeerArchivo
+
+    cmp eax,TRUE
+    jne ErrorCerrar
+
+    ;---------------------------------------------------------
+    ; Iniciar lectura desde el principio
+    ;---------------------------------------------------------
+
+    invoke PosicionarInicio
+
+SiguienteRegistro:
+
+    ;---------------------------------------------------------
+    ; ¿Llegó al final?
+    ;---------------------------------------------------------
+
+    invoke FinDeArchivo
+
+    cmp eax,TRUE
+    je NoEncontrada
+
+    ;---------------------------------------------------------
+    ; Leer una línea
+    ;---------------------------------------------------------
+
+    invoke LeerLinea
+
+    ;---------------------------------------------------------
+    ; Separar:
+    ; usuario|pin|saldo
+    ;---------------------------------------------------------
+
+    invoke SepararCampos
+
+    ;---------------------------------------------------------
+    ; Comparar usuario
+    ;---------------------------------------------------------
+
+    invoke lstrcmp,\
+            ADDR CampoUsuario,\
+            lpUsuario
+
+    cmp eax,0
+    je Encontrada
+
+    ;---------------------------------------------------------
+    ; Continuar con la siguiente línea
+    ;---------------------------------------------------------
+
+    jmp SiguienteRegistro
+
+;-------------------------------------------------------------
+; Cuenta encontrada
+;-------------------------------------------------------------
+
+Encontrada:
+
+    ; Copiar datos encontrados
+
+    invoke lstrcpy,\
+            ADDR CuentaActual.Usuario,\
+            ADDR CampoUsuario
+
+    invoke lstrcpy,\
+            ADDR CuentaActual.PIN,\
+            ADDR CampoPIN
+
+    invoke lstrcpy,\
+            ADDR BufferNumero,\
+            ADDR CampoSaldo
+
+    ; Convertir saldo ASCII -> DWORD
+
+    invoke CadenaANumero,\
+            ADDR BufferNumero
+
+    mov CuentaActual.Saldo,eax
+
+    invoke CerrarArchivo
+
+    mov eax,TRUE
+    ret
+
+;-------------------------------------------------------------
+; Cuenta no encontrada
+;-------------------------------------------------------------
+
+NoEncontrada:
+
+ErrorCerrar:
+
+    invoke CerrarArchivo
+
+ErrorBuscar:
+
+    mov eax,FALSE
+    ret
+
+BuscarCuenta ENDP
+

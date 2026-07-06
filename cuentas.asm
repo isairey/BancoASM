@@ -1206,6 +1206,7 @@ GuardarError:
 GuardarBanco ENDP
 
 
+
 ;=============================================================
 ; PARTE 12/14
 ; Conversiones de cadena y número
@@ -1419,88 +1420,5 @@ NoIguales:
 
 CompararCadena ENDP
 
-;=============================================================
-; PARTE 14/14
-; Cierre del módulo y utilidades finales
-;=============================================================
 
-;-------------------------------------------------------------
-; LimpiarCuentaActual
-; Resetea la estructura CuentaActual
-;-------------------------------------------------------------
-
-LimpiarCuentaActual PROC
-
-    invoke RtlZeroMemory,\
-            ADDR CuentaActual,\
-            SIZEOF CuentaActual
-
-    mov eax,TRUE
-    ret
-
-LimpiarCuentaActual ENDP
-
-
-;-------------------------------------------------------------
-; InicializarModulo
-; Se ejecuta al iniciar el sistema bancario
-;-------------------------------------------------------------
-
-InicializarModulo PROC
-
-    mov hArchivo,0
-    mov PosicionActual,0
-    mov TamArchivo,0
-    mov BytesLeidos,0
-    mov BytesEscritos,0
-    mov IndiceCuenta,0
-    mov SaldoTemporal,0
-
-    invoke LimpiarCuentaActual
-
-    mov eax,TRUE
-    ret
-
-InicializarModulo ENDP
-
-
-;-------------------------------------------------------------
-; FinalizarModulo
-; Se ejecuta al cerrar el sistema
-;-------------------------------------------------------------
-
-FinalizarModulo PROC
-
-    ; Cerrar archivo si sigue abierto
-    cmp hArchivo,0
-    je FinModulo
-
-    invoke CerrarArchivo
-
-FinModulo:
-
-    invoke LimpiarCuentaActual
-
-    mov eax,TRUE
-    ret
-
-FinalizarModulo ENDP
-
-
-;-------------------------------------------------------------
-; EstadoSistema
-; Devuelve información básica del sistema
-;-------------------------------------------------------------
-
-EstadoSistema PROC
-
-    ; EAX = 1 → sistema listo
-
-    mov eax,1
-    ret
-
-EstadoSistema ENDP
-
-
-END
 

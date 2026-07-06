@@ -427,44 +427,34 @@ LeerLinea ENDP
 
 ;=============================================================
 ; PARTE 4/14
-; Separar los campos:
-; usuario|pin|saldo
-;=============================================================
-
-;-------------------------------------------------------------
-; Variables para los campos
-;-------------------------------------------------------------
-
-.data?
-
-CampoUsuario db MAX_USUARIO dup(?)
-CampoPIN     db MAX_PIN dup(?)
-CampoSaldo   db 16 dup(?)
-
-;-------------------------------------------------------------
 ; SepararCampos
-;
 ; Convierte:
 ;
-; isai|1234|15000
+; usuario|pin|saldo
 ;
 ; en:
 ;
-; CampoUsuario = isai
-; CampoPIN     = 1234
-; CampoSaldo   = 15000
-;-------------------------------------------------------------
+; CampoUsuario
+; CampoPIN
+; CampoSaldo
+;=============================================================
+
+.data
+
+CampoUsuario db MAX_USUARIO dup(0)
+CampoPIN     db MAX_PIN dup(0)
+CampoSaldo   db 16 dup(0)
 
 .code
 
 SepararCampos PROC
 
-    LOCAL indice:DWORD
-    LOCAL estado:DWORD
+    LOCAL Estado:DWORD
+    LOCAL Indice:DWORD
 
-    ;---------------------------------------------
+    ;-----------------------------------------
     ; Limpiar buffers
-    ;---------------------------------------------
+    ;-----------------------------------------
 
     invoke RtlZeroMemory,\
             ADDR CampoUsuario,\
@@ -478,118 +468,82 @@ SepararCampos PROC
             ADDR CampoSaldo,\
             SIZEOF CampoSaldo
 
-    mov indice,0
-    mov estado,0
+    mov Estado,0
+    mov Indice,0
 
     mov esi,OFFSET BufferLinea
 
-LeerCaracter:
+LeerSiguiente:
 
     mov al,[esi]
 
     cmp al,0
     je FinSeparacion
 
-    ;---------------------------------------------
-    ; ¿Separador?
-    ;---------------------------------------------
-
     cmp al,'|'
-    jne CopiarCaracter
+    je CambiarCampo
 
-    inc estado
-    mov indice,0
+    ;-----------------------------------------
+    ; Usuario
+    ;-----------------------------------------
 
-    inc esi
-
-    jmp LeerCaracter
-
-CopiarCaracter:
-
-    ;---------------------------------------------
-    ; Campo Usuario
-    ;---------------------------------------------
-
-    cmp estado,0
-    jne CampoPIN_Parte
+    cmp Estado,0
+    jne RevisarPIN
 
     mov edi,OFFSET CampoUsuario
-
-    mov eax,indice
-
-    add edi,eax
-
+    add edi,Indice
     mov [edi],al
 
-    inc indice
+    inc Indice
     inc esi
 
-    jmp LeerCaracter
+    jmp LeerSiguiente
 
-CampoPIN_Parte:
+RevisarPIN:
 
-    ;---------------------------------------------
-    ; Campo PIN
-    ;---------------------------------------------
+    ;-----------------------------------------
+    ; PIN
+    ;-----------------------------------------
 
-    cmp estado,1
-    jne CampoSaldo_Parte
+    cmp Estado,1
+    jne GuardarSaldo
 
     mov edi,OFFSET CampoPIN
-
-    mov eax,indice
-
-    add edi,eax
-
+    add edi,Indice
     mov [edi],al
 
-    inc indice
+    inc Indice
     inc esi
 
-    jmp LeerCaracter
+    jmp LeerSiguiente
 
-CampoSaldo_Parte:
+GuardarSaldo:
 
-    ;---------------------------------------------
-    ; Campo Saldo
-    ;---------------------------------------------
+    ;-----------------------------------------
+    ; Saldo
+    ;-----------------------------------------
 
     mov edi,OFFSET CampoSaldo
-
-    mov eax,indice
-
-    add edi,eax
-
+    add edi,Indice
     mov [edi],al
 
-    inc indice
+    inc Indice
     inc esi
 
-    jmp LeerCaracter
+    jmp LeerSiguiente
+
+CambiarCampo:
+
+    inc Estado
+    mov Indice,0
+
+    inc esi
+
+    jmp LeerSiguiente
 
 FinSeparacion:
-
-    ;---------------------------------------------
-    ; Agregar fin de cadena
-    ;---------------------------------------------
-
-    mov edi,OFFSET CampoUsuario
-    invoke lstrlen,edi
-    add edi,eax
-    mov BYTE PTR [edi],0
-
-    mov edi,OFFSET CampoPIN
-    invoke lstrlen,edi
-    add edi,eax
-    mov BYTE PTR [edi],0
-
-    mov edi,OFFSET CampoSaldo
-    invoke lstrlen,edi
-    add edi,eax
-    mov BYTE PTR [edi],0
 
     mov eax,TRUE
     ret
 
 SepararCampos ENDP
-

@@ -1109,3 +1109,99 @@ CrearError:
 
 CrearCuenta ENDP
 
+;=============================================================
+; PARTE 11/14
+; GuardarBanco
+; Reescribe completamente banco.dat con CuentaActual
+;=============================================================
+
+GuardarBanco PROC
+
+    ;---------------------------------------------------------
+    ; Abrir archivo en modo escritura (sobrescribir)
+    ;---------------------------------------------------------
+
+    invoke CreateFile,\
+            ADDR ArchivoBanco,\
+            GENERIC_WRITE,\
+            0,\
+            NULL,\
+            CREATE_ALWAYS,\
+            FILE_ATTRIBUTE_NORMAL,\
+            NULL
+
+    mov hArchivo,eax
+
+    cmp eax,INVALID_HANDLE_VALUE
+    je GuardarError
+
+    ;---------------------------------------------------------
+    ; Construir línea de cuenta actual
+    ; usuario|pin|saldo
+    ;---------------------------------------------------------
+
+    invoke RtlZeroMemory,\
+            ADDR BufferLinea,\
+            SIZEOF BufferLinea
+
+    invoke lstrcpy,\
+            ADDR BufferLinea,\
+            ADDR CuentaActual.Usuario
+
+    invoke lstrcat,\
+            ADDR BufferLinea,\
+            ADDR Separador
+
+    invoke lstrcat,\
+            ADDR BufferLinea,\
+            ADDR CuentaActual.PIN
+
+    invoke lstrcat,\
+            ADDR BufferLinea,\
+            ADDR Separador
+
+    invoke NumeroACadena,\
+            CuentaActual.Saldo,\
+            ADDR BufferNumero
+
+    invoke lstrcat,\
+            ADDR BufferLinea,\
+            ADDR BufferNumero
+
+    invoke lstrcat,\
+            ADDR BufferLinea,\
+            ADDR CRLF
+
+    ;---------------------------------------------------------
+    ; Escribir en archivo
+    ;---------------------------------------------------------
+
+    invoke lstrlen,ADDR BufferLinea
+
+    invoke WriteFile,\
+            hArchivo,\
+            ADDR BufferLinea,\
+            eax,\
+            ADDR BytesEscritos,\
+            NULL
+
+    ;---------------------------------------------------------
+    ; Cerrar archivo
+    ;---------------------------------------------------------
+
+    invoke CloseHandle,hArchivo
+
+    mov eax,TRUE
+    ret
+
+;-------------------------------------------------------------
+; Error
+;-------------------------------------------------------------
+
+GuardarError:
+
+    mov eax,FALSE
+    ret
+
+GuardarBanco ENDP
+

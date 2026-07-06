@@ -25,18 +25,41 @@ includelib user32.lib
 ; Prototipos
 ;=============================================================
 
+;-------------------------------
+; Funciones principales
+;-------------------------------
+
 BuscarCuenta      PROTO :DWORD
-ValidarPIN        PROTO :DWORD,:DWORD
-ObtenerSaldo      PROTO :DWORD
-DepositarDinero   PROTO :DWORD,:DWORD
-RetirarDinero     PROTO :DWORD,:DWORD
-TransferirDinero  PROTO :DWORD,:DWORD,:DWORD
+ValidarPIN        PROTO :DWORD
+ObtenerSaldo      PROTO
+
+DepositarDinero   PROTO :DWORD
+RetirarDinero     PROTO :DWORD
+TransferirDinero  PROTO :DWORD,:DWORD
+
 CrearCuenta       PROTO :DWORD,:DWORD,:DWORD
+
 GuardarBanco      PROTO
 CargarBanco       PROTO
 
+;-------------------------------
+; Manejo de archivos
+;-------------------------------
+
 AbrirArchivo      PROTO
 CerrarArchivo     PROTO
+ReiniciarBuffers  PROTO
+ObtenerTamArchivo PROTO
+
+LeerArchivo       PROTO
+PosicionarInicio  PROTO
+FinDeArchivo      PROTO
+LeerLinea         PROTO
+SepararCampos     PROTO
+
+;-------------------------------
+; Funciones auxiliares
+;-------------------------------
 
 CopiarCadena      PROTO :DWORD,:DWORD
 CompararCadena    PROTO :DWORD,:DWORD
@@ -44,6 +67,9 @@ LongitudCadena    PROTO :DWORD
 
 NumeroACadena     PROTO :DWORD,:DWORD
 CadenaANumero     PROTO :DWORD
+
+ObtenerUsuario    PROTO
+ObtenerPIN        PROTO
 
 ;=============================================================
 ; Constantes
@@ -551,12 +577,9 @@ SepararCampos ENDP
 ;=============================================================
 ; PARTE 5/14
 ; BuscarCuenta
-; Busca un usuario dentro de banco.dat
 ;=============================================================
 
 BuscarCuenta PROC lpUsuario:DWORD
-
-BuscarInicio:
 
     ;---------------------------------------------------------
     ; Abrir archivo
@@ -577,34 +600,39 @@ BuscarInicio:
     jne ErrorCerrar
 
     ;---------------------------------------------------------
-    ; Iniciar lectura desde el principio
+    ; Posicionar al inicio
     ;---------------------------------------------------------
 
     invoke PosicionarInicio
 
-SiguienteRegistro:
+BuscarSiguiente:
 
     ;---------------------------------------------------------
-    ; ¿Llegó al final?
+    ; ¿Fin del archivo?
     ;---------------------------------------------------------
 
     invoke FinDeArchivo
 
     cmp eax,TRUE
-    je NoEncontrada
+    je CuentaNoExiste
 
     ;---------------------------------------------------------
-    ; Leer una línea
+    ; Leer línea
     ;---------------------------------------------------------
 
     invoke LeerLinea
 
+    cmp eax,TRUE
+    jne CuentaNoExiste
+
     ;---------------------------------------------------------
-    ; Separar:
-    ; usuario|pin|saldo
+    ; Separar usuario|pin|saldo
     ;---------------------------------------------------------
 
     invoke SepararCampos
+
+    cmp eax,TRUE
+    jne BuscarSiguiente
 
     ;---------------------------------------------------------
     ; Comparar usuario
@@ -615,21 +643,13 @@ SiguienteRegistro:
             lpUsuario
 
     cmp eax,0
-    je Encontrada
-
-    ;---------------------------------------------------------
-    ; Continuar con la siguiente línea
-    ;---------------------------------------------------------
-
-    jmp SiguienteRegistro
+    jne BuscarSiguiente
 
 ;-------------------------------------------------------------
-; Cuenta encontrada
+; Usuario encontrado
 ;-------------------------------------------------------------
 
-Encontrada:
-
-    ; Copiar datos encontrados
+CuentaEncontrada:
 
     invoke lstrcpy,\
             ADDR CuentaActual.Usuario,\
@@ -643,8 +663,6 @@ Encontrada:
             ADDR BufferNumero,\
             ADDR CampoSaldo
 
-    ; Convertir saldo ASCII -> DWORD
-
     invoke CadenaANumero,\
             ADDR BufferNumero
 
@@ -656,10 +674,10 @@ Encontrada:
     ret
 
 ;-------------------------------------------------------------
-; Cuenta no encontrada
+; Usuario no encontrado
 ;-------------------------------------------------------------
 
-NoEncontrada:
+CuentaNoExiste:
 
 ErrorCerrar:
 
@@ -672,6 +690,7 @@ ErrorBuscar:
 
 BuscarCuenta ENDP
 
+
 ;=============================================================
 ; PARTE 6/14
 ; ValidarPIN
@@ -681,24 +700,19 @@ BuscarCuenta ENDP
 ;-------------------------------------------------------------
 ; ValidarPIN
 ;
-; Parámetros:
-;   lpCuenta -> Puntero a la estructura CUENTA
-;   lpPIN    -> Puntero al PIN ingresado
+; Parámetro:
+;   lpPIN -> Dirección del PIN ingresado
 ;
 ; Devuelve:
-;   EAX = TRUE  si el PIN es correcto
-;   EAX = FALSE si es incorrecto
+;   EAX = TRUE
+;   EAX = FALSE
 ;-------------------------------------------------------------
 
-ValidarPIN PROC lpCuenta:DWORD, lpPIN:DWORD
-
-    mov esi,lpCuenta
-
-    ; Comparar el PIN ingresado con el PIN almacenado
+ValidarPIN PROC lpPIN:DWORD
 
     invoke lstrcmp,\
             lpPIN,\
-            esi + CUENTA.PIN
+            ADDR CuentaActual.PIN
 
     cmp eax,0
     jne PINIncorrecto
@@ -717,20 +731,110 @@ ValidarPIN ENDP
 ;-------------------------------------------------------------
 ; ObtenerSaldo
 ;
-; Parámetros:
-;   lpCuenta -> Puntero a la estructura CUENTA
-;
 ; Devuelve:
-;   EAX = Saldo
+;   EAX = saldo actual
 ;-------------------------------------------------------------
 
-ObtenerSaldo PROC lpCuenta:DWORD
+ObtenerSaldo PROC
 
-    mov esi,lpCuenta
-
-    mov eax,(CUENTA PTR [esi]).Saldo
+    mov eax,CuentaActual.Saldo
 
     ret
 
 ObtenerSaldo ENDP
 
+
+;-------------------------------------------------------------
+; ObtenerUsuario
+;
+; Devuelve:
+;   EAX = Dirección del usuario
+;-------------------------------------------------------------
+
+ObtenerUsuario PROC
+
+    mov eax,OFFSET CuentaActual.Usuario
+
+    ret
+
+ObtenerUsuario ENDP
+
+
+;-------------------------------------------------------------
+; ObtenerPIN
+;
+; Devuelve:
+;   EAX = Dirección del PIN
+;-------------------------------------------------------------
+
+ObtenerPIN PROC
+
+    mov eax,OFFSET CuentaActual.PIN
+
+    ret
+
+ObtenerPIN ENDP
+
+
+;=============================================================
+; PARTE 7/14
+; DepositarDinero
+;=============================================================
+
+DepositarDinero PROC Monto:DWORD
+
+    ;---------------------------------------------------------
+    ; Verificar monto
+    ;---------------------------------------------------------
+
+    mov eax,Monto
+
+    cmp eax,0
+    jle DepositoError
+
+    ;---------------------------------------------------------
+    ; Obtener saldo actual
+    ;---------------------------------------------------------
+
+    invoke ObtenerSaldo
+
+    mov SaldoTemporal,eax
+
+    ;---------------------------------------------------------
+    ; Sumar depósito
+    ;---------------------------------------------------------
+
+    mov eax,SaldoTemporal
+
+    add eax,Monto
+
+    mov CuentaActual.Saldo,eax
+
+    ;---------------------------------------------------------
+    ; Guardar cambios
+    ;---------------------------------------------------------
+
+    invoke GuardarBanco
+
+    mov eax,TRUE
+    ret
+
+DepositoError:
+
+    mov eax,FALSE
+    ret
+
+DepositarDinero ENDP
+
+
+;=============================================================
+; ConsultarSaldo
+;=============================================================
+
+ConsultarSaldo PROC
+
+    invoke ObtenerSaldo
+
+    ret
+
+ConsultarSaldo ENDP

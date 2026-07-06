@@ -156,11 +156,6 @@ CuentaOrigen CUENTA ?
 
 .code
 
-
-
-
-
-
 ;=============================================================
 ; PARTE 2/14
 ; Apertura y cierre de banco.dat
@@ -1323,5 +1318,106 @@ FinNumero:
     ret
 
 NumeroACadena ENDP
+
+
+
+;=============================================================
+; PARTE 13/14
+; Funciones auxiliares
+; CopiarCadena / CompararCadena / LongitudCadena
+;=============================================================
+
+;-------------------------------------------------------------
+; LongitudCadena
+; Devuelve longitud de string
+;-------------------------------------------------------------
+
+LongitudCadena PROC lpCadena:DWORD
+
+    mov esi,lpCadena
+    xor ecx,ecx
+
+Contar:
+
+    mov al,[esi]
+    cmp al,0
+    je FinLen
+
+    inc ecx
+    inc esi
+    jmp Contar
+
+FinLen:
+
+    mov eax,ecx
+    ret
+
+LongitudCadena ENDP
+
+
+;-------------------------------------------------------------
+; CopiarCadena
+;-------------------------------------------------------------
+
+CopiarCadena PROC lpDestino:DWORD, lpOrigen:DWORD
+
+    mov esi,lpOrigen
+    mov edi,lpDestino
+
+CopiarLoop:
+
+    mov al,[esi]
+    mov [edi],al
+
+    cmp al,0
+    je FinCopy
+
+    inc esi
+    inc edi
+    jmp CopiarLoop
+
+FinCopy:
+
+    ret
+
+CopiarCadena ENDP
+
+
+;-------------------------------------------------------------
+; CompararCadena
+;-------------------------------------------------------------
+
+CompararCadena PROC lpStr1:DWORD, lpStr2:DWORD
+
+    mov esi,lpStr1
+    mov edi,lpStr2
+
+CompararLoop:
+
+    mov al,[esi]
+    mov bl,[edi]
+
+    cmp al,bl
+    jne NoIguales
+
+    cmp al,0
+    je Iguales
+
+    inc esi
+    inc edi
+    jmp CompararLoop
+
+Iguales:
+
+    mov eax,0
+    ret
+
+NoIguales:
+
+    mov eax,1
+    ret
+
+CompararCadena ENDP
+
 
 

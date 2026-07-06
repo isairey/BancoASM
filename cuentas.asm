@@ -156,6 +156,11 @@ CuentaOrigen CUENTA ?
 
 .code
 
+
+
+
+
+
 ;=============================================================
 ; PARTE 2/14
 ; Apertura y cierre de banco.dat
@@ -1204,4 +1209,119 @@ GuardarError:
     ret
 
 GuardarBanco ENDP
+
+
+;=============================================================
+; PARTE 12/14
+; Conversiones de cadena y número
+; CadenaANumero / NumeroACadena
+;=============================================================
+
+;-------------------------------------------------------------
+; CadenaANumero
+;
+; Convierte string ASCII a DWORD
+; Ej: "1500" -> 1500
+;-------------------------------------------------------------
+
+CadenaANumero PROC lpCadena:DWORD
+
+    mov esi,lpCadena
+    xor eax,eax
+    xor ecx,ecx
+
+ConvertLoop:
+
+    mov bl,[esi]
+    cmp bl,0
+    je FinConversion
+
+    cmp bl,'0'
+    jl FinConversion
+
+    cmp bl,'9'
+    jg FinConversion
+
+    sub bl,'0'
+
+    mov edx,eax
+    imul eax,10
+    add eax,edx
+    add eax,ebx
+
+    inc esi
+    jmp ConvertLoop
+
+FinConversion:
+
+    ret
+
+CadenaANumero ENDP
+
+
+;-------------------------------------------------------------
+; NumeroACadena
+;
+; Convierte DWORD a ASCII
+; Ej: 1500 -> "1500"
+;-------------------------------------------------------------
+
+NumeroACadena PROC Valor:DWORD, lpBuffer:DWORD
+
+    LOCAL temp[16]:BYTE
+
+    mov eax,Valor
+    mov edi,OFFSET temp
+    add edi,15
+    mov BYTE PTR [edi],0
+
+    dec edi
+
+    cmp eax,0
+    jne Convertir
+
+    mov BYTE PTR [edi],'0'
+    jmp Copiar
+
+Convertir:
+
+ConvertLoop:
+
+    xor edx,edx
+    mov ecx,10
+    div ecx
+
+    add dl,'0'
+    mov [edi],dl
+
+    dec edi
+
+    cmp eax,0
+    jne ConvertLoop
+
+    inc edi
+
+Copiar:
+
+    mov esi,edi
+    mov edi,lpBuffer
+
+CopiarLoop:
+
+    mov al,[esi]
+    mov [edi],al
+
+    cmp al,0
+    je FinNumero
+
+    inc esi
+    inc edi
+    jmp CopiarLoop
+
+FinNumero:
+
+    ret
+
+NumeroACadena ENDP
+
 

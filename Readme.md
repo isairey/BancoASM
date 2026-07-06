@@ -266,17 +266,7 @@ recursos.res
 
 ---
 
-# 📸 Capturas
 
-Próximamente...
-
-- Login
-- Menú Principal
-- Depósitos
-- Transferencias
-- Historial
-
----
 
 # 📚 Objetivos del Proyecto
 

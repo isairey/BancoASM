@@ -997,3 +997,115 @@ TransferError:
 TransferirDinero ENDP
 
 
+;=============================================================
+; PARTE 10/14
+; CrearCuenta
+;=============================================================
+
+CrearCuenta PROC lpUsuario:DWORD, lpPIN:DWORD, SaldoInicial:DWORD
+
+    ;---------------------------------------------------------
+    ; Validar usuario
+    ;---------------------------------------------------------
+
+    cmp lpUsuario,0
+    je CrearError
+
+    cmp lpPIN,0
+    je CrearError
+
+    ;---------------------------------------------------------
+    ; Abrir archivo
+    ;---------------------------------------------------------
+
+    invoke AbrirArchivo
+    cmp eax,TRUE
+    jne CrearError
+
+    ;---------------------------------------------------------
+    ; Posicionar al final del archivo
+    ;---------------------------------------------------------
+
+    invoke SetFilePointer,\
+            hArchivo,\
+            0,\
+            NULL,\
+            FILE_END
+
+    ;---------------------------------------------------------
+    ; Limpiar buffer de línea
+    ;---------------------------------------------------------
+
+    invoke RtlZeroMemory,\
+            ADDR BufferLinea,\
+            SIZEOF BufferLinea
+
+    ;---------------------------------------------------------
+    ; Construir línea:
+    ; usuario|pin|saldo
+    ;---------------------------------------------------------
+
+    invoke lstrcpy,\
+            ADDR BufferLinea,\
+            lpUsuario
+
+    invoke lstrcat,\
+            ADDR BufferLinea,\
+            ADDR Separador
+
+    invoke lstrcat,\
+            ADDR BufferLinea,\
+            lpPIN
+
+    invoke lstrcat,\
+            ADDR BufferLinea,\
+            ADDR Separador
+
+    ; convertir saldo a string (debe existir CadenaANumero/NumeroACadena)
+    invoke NumeroACadena,\
+            SaldoInicial,\
+            ADDR BufferNumero
+
+    invoke lstrcat,\
+            ADDR BufferLinea,\
+            ADDR BufferNumero
+
+    invoke lstrcat,\
+            ADDR BufferLinea,\
+            ADDR CRLF
+
+    ;---------------------------------------------------------
+    ; Escribir en archivo
+    ;---------------------------------------------------------
+
+    invoke lstrlen,ADDR BufferLinea
+
+    invoke WriteFile,\
+            hArchivo,\
+            ADDR BufferLinea,\
+            eax,\
+            ADDR BytesEscritos,\
+            NULL
+
+    ;---------------------------------------------------------
+    ; Cerrar archivo
+    ;---------------------------------------------------------
+
+    invoke CerrarArchivo
+
+    mov eax,TRUE
+    ret
+
+;-------------------------------------------------------------
+; Error
+;-------------------------------------------------------------
+
+CrearError:
+
+    invoke CerrarArchivo
+
+    mov eax,FALSE
+    ret
+
+CrearCuenta ENDP
+

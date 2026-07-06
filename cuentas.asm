@@ -130,3 +130,131 @@ CuentaOrigen CUENTA ?
 
 .code
 
+;=============================================================
+; PARTE 2/14
+; Apertura y cierre de banco.dat
+;=============================================================
+
+;-------------------------------------------------------------
+; AbrirArchivo
+;
+; Abre banco.dat para lectura y escritura.
+;
+; Retorna:
+;   EAX = TRUE  -> Archivo abierto
+;   EAX = FALSE -> Error
+;-------------------------------------------------------------
+
+AbrirArchivo PROC
+
+    invoke CreateFile,\
+            ADDR ArchivoBanco,\
+            GENERIC_READ or GENERIC_WRITE,\
+            FILE_SHARE_READ,\
+            NULL,\
+            OPEN_ALWAYS,\
+            FILE_ATTRIBUTE_NORMAL,\
+            NULL
+
+    mov hArchivo,eax
+
+    cmp eax,INVALID_HANDLE_VALUE
+    je ErrorAbrir
+
+    mov eax,TRUE
+    ret
+
+ErrorAbrir:
+
+    mov eax,FALSE
+    ret
+
+AbrirArchivo ENDP
+
+
+;-------------------------------------------------------------
+; CerrarArchivo
+;
+; Cierra el archivo si está abierto.
+;
+; Retorna:
+;   TRUE
+;-------------------------------------------------------------
+
+CerrarArchivo PROC
+
+    cmp hArchivo,INVALID_HANDLE_VALUE
+    je FinCerrar
+
+    invoke CloseHandle,hArchivo
+
+    mov hArchivo,INVALID_HANDLE_VALUE
+
+FinCerrar:
+
+    mov eax,TRUE
+    ret
+
+CerrarArchivo ENDP
+
+
+;-------------------------------------------------------------
+; ReiniciarBuffers
+;
+; Limpia todos los buffers utilizados.
+;-------------------------------------------------------------
+
+ReiniciarBuffers PROC
+
+    invoke RtlZeroMemory,\
+            ADDR BufferArchivo,\
+            SIZEOF BufferArchivo
+
+    invoke RtlZeroMemory,\
+            ADDR BufferLinea,\
+            SIZEOF BufferLinea
+
+    invoke RtlZeroMemory,\
+            ADDR BufferUsuario,\
+            SIZEOF BufferUsuario
+
+    invoke RtlZeroMemory,\
+            ADDR BufferPIN,\
+            SIZEOF BufferPIN
+
+    invoke RtlZeroMemory,\
+            ADDR BufferNumero,\
+            SIZEOF BufferNumero
+
+    mov BytesLeidos,0
+    mov BytesEscritos,0
+    mov PosicionActual,0
+    mov TamArchivo,0
+
+    mov eax,TRUE
+    ret
+
+ReiniciarBuffers ENDP
+
+
+;-------------------------------------------------------------
+; ObtenerTamArchivo
+;
+; Obtiene el tamaño del archivo banco.dat.
+;
+; Retorna:
+;   EAX = tamaño del archivo
+;-------------------------------------------------------------
+
+ObtenerTamArchivo PROC
+
+    invoke GetFileSize,\
+            hArchivo,\
+            NULL
+
+    mov TamArchivo,eax
+
+    mov eax,TamArchivo
+    ret
+
+ObtenerTamArchivo ENDP

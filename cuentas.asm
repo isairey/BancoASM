@@ -675,43 +675,60 @@ BuscarCuenta ENDP
 ;=============================================================
 ; PARTE 6/14
 ; ValidarPIN
+; ObtenerSaldo
 ;=============================================================
+
+;-------------------------------------------------------------
+; ValidarPIN
+;
+; Parámetros:
+;   lpCuenta -> Puntero a la estructura CUENTA
+;   lpPIN    -> Puntero al PIN ingresado
+;
+; Devuelve:
+;   EAX = TRUE  si el PIN es correcto
+;   EAX = FALSE si es incorrecto
+;-------------------------------------------------------------
 
 ValidarPIN PROC lpCuenta:DWORD, lpPIN:DWORD
 
-    ;---------------------------------------------------------
-    ; Comparar el PIN recibido con el PIN de la cuenta
-    ;---------------------------------------------------------
-
     mov esi,lpCuenta
+
+    ; Comparar el PIN ingresado con el PIN almacenado
 
     invoke lstrcmp,\
             lpPIN,\
-            ADDR [esi].CUENTA.PIN
+            esi + CUENTA.PIN
 
     cmp eax,0
-    je PINCorrecto
-
-    mov eax,FALSE
-    ret
-
-PINCorrecto:
+    jne PINIncorrecto
 
     mov eax,TRUE
+    ret
+
+PINIncorrecto:
+
+    mov eax,FALSE
     ret
 
 ValidarPIN ENDP
 
 
-;=============================================================
+;-------------------------------------------------------------
 ; ObtenerSaldo
-;=============================================================
+;
+; Parámetros:
+;   lpCuenta -> Puntero a la estructura CUENTA
+;
+; Devuelve:
+;   EAX = Saldo
+;-------------------------------------------------------------
 
 ObtenerSaldo PROC lpCuenta:DWORD
 
     mov esi,lpCuenta
 
-    mov eax,[esi].CUENTA.Saldo
+    mov eax,(CUENTA PTR [esi]).Saldo
 
     ret
 

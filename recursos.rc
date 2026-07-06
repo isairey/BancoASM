@@ -1,0 +1,74 @@
+#include "recursos.inc"
+
+;=============================================================
+; ICONO (opcional)
+;=============================================================
+
+IDI_BANCO ICON "banco.ico"
+
+;=============================================================
+; DIÁLOGO DE LOGIN
+;=============================================================
+
+IDD_LOGIN DIALOG 0, 0, 220, 140
+STYLE DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Sistema Bancario - Login"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Usuario:", -1, 10, 15, 50, 10
+    EDITTEXT        IDC_USUARIO, 70, 12, 130, 14, ES_AUTOHSCROLL
+
+    LTEXT           "PIN:", -1, 10, 40, 50, 10
+    EDITTEXT        IDC_PIN, 70, 37, 130, 14, ES_PASSWORD | ES_AUTOHSCROLL
+
+    PUSHBUTTON      "Iniciar Sesión", IDC_LOGIN, 10, 70, 90, 20
+    PUSHBUTTON      "Crear Cuenta", IDC_CREAR, 110, 70, 90, 20
+    PUSHBUTTON      "Salir", IDC_SALIR, 70, 100, 90, 20
+END
+
+;=============================================================
+; DIÁLOGO DEL MENÚ PRINCIPAL
+;=============================================================
+
+IDD_MENU DIALOG 0, 0, 300, 220
+STYLE DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Sistema Bancario - Menú Principal"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Saldo Actual:", -1, 10, 10, 80, 10
+    LTEXT           "", IDC_SALDOACTUAL, 100, 10, 180, 10
+
+    PUSHBUTTON      "Consultar Saldo", IDC_CONSULTAR, 10, 40, 120, 20
+    PUSHBUTTON      "Depositar", IDC_DEPOSITAR, 150, 40, 120, 20
+
+    PUSHBUTTON      "Retirar", IDC_RETIRAR, 10, 70, 120, 20
+    PUSHBUTTON      "Transferir", IDC_TRANSFERIR, 150, 70, 120, 20
+
+    PUSHBUTTON      "Historial", IDC_HISTORIAL, 10, 100, 120, 20
+    PUSHBUTTON      "Cerrar Sesión", IDC_CERRARSESION, 150, 100, 120, 20
+END
+
+;=============================================================
+; DIÁLOGO CREAR CUENTA
+;=============================================================
+
+IDD_CREARCUENTA DIALOG 0, 0, 240, 180
+STYLE DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Crear Cuenta"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Usuario:", -1, 10, 15, 80, 10
+    EDITTEXT        IDC_NOMBRE, 90, 12, 130, 14
+
+    LTEXT           "PIN:", -1, 10, 40, 80, 10
+    EDITTEXT        IDC_PIN1, 90, 37, 130, 14, ES_PASSWORD
+
+    LTEXT           "Confirmar PIN:", -1, 10, 65, 80, 10
+    EDITTEXT        IDC_PIN2, 90, 62, 130, 14, ES_PASSWORD
+
+    LTEXT           "Saldo inicial:", -1, 10, 90, 80, 10
+    EDITTEXT        IDC_SALDO, 90, 87, 130, 14
+
+    PUSHBUTTON      "Guardar", IDC_GUARDAR, 30, 120, 80, 20
+    PUSHBUTTON      "Cancelar", IDC_CANCELAR, 130, 120, 80, 20
+END

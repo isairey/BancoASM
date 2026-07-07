@@ -296,7 +296,7 @@ recursos.res
 
 ---
 
-# 👨‍💻 Autor
+# 👨‍💻 Desarrollador
 
 **Isai Reyes Peña**
 

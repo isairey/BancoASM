@@ -300,9 +300,7 @@ recursos.res
 
 **Isai Reyes Peña**
 
-GitHub:
-
-https://github.com/isairey
+GitHub:  https://github.com/isairey
 
 ---
 
